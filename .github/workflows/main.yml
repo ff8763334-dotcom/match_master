@@ -12,27 +12,38 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # خطوة فك الضغط الذكي للملف الذي رفعته
     - name: Unzip Project
-      run: unzip match_master.zip -d ./
+      run: |
+        if [ -f "match_master.zip" ]; then
+          unzip match_master.zip -d ./
+        else
+          unzip *.zip -d ./
+        fi
 
-    # تحميل بيئة Flutter داخل السيرفر الافتراضي
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
 
-    # تحميل المكتبات المساعدة للعبة
-    - name: Install Dependencies
-      run: flutter pub get
+    # خطوة ذكية جداً تبحث عن ملف pubspec وتدخل لمكانه تلقائياً
+    - name: Find Project Root and Install Dependencies
+      run: |
+        PUBSPEC_PATH=$(find . -name "pubspec.yaml" -print -quit)
+        if [ -z "$PUBSPEC_PATH" ]; then
+          echo "Error: pubspec.yaml not found anywhere!" && exit 1
+        fi
+        PROJECT_ROOT=$(dirname "$PUBSPEC_PATH")
+        echo "PROJECT_PATH=$PROJECT_ROOT" >> $GITHUB_ENV
+        cd $PROJECT_ROOT
+        flutter pub get
 
-    # بناء ملف الـ APK (نسخة الديباج للتجربة)
     - name: Build APK
-      run: flutter build apk --debug
+      run: |
+        cd ${{ env.PROJECT_PATH }}
+        flutter build apk --debug
 
-    # رفع ملف الـ APK في موقع جيت هاب لتحميله
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Candy_Crush_APK
-        path: build/app/outputs/flutter-apk/app-debug.apk
+        path: "**/build/app/outputs/flutter-apk/app-debug.apk"
