@@ -25,8 +25,8 @@ jobs:
       with:
         channel: 'stable'
 
-    # خطوة ذكية جداً تبحث عن ملف pubspec وتدخل لمكانه تلقائياً
-    - name: Find Project Root and Install Dependencies
+    # خطوة إصلاح وتوليد ملفات الأندرويد والـ Gradle المفقودة تلقائياً داخل السيرفر
+    - name: Find Project Root and Repair Project
       run: |
         PUBSPEC_PATH=$(find . -name "pubspec.yaml" -print -quit)
         if [ -z "$PUBSPEC_PATH" ]; then
@@ -35,6 +35,9 @@ jobs:
         PROJECT_ROOT=$(dirname "$PUBSPEC_PATH")
         echo "PROJECT_PATH=$PROJECT_ROOT" >> $GITHUB_ENV
         cd $PROJECT_ROOT
+        
+        # توليد مجلد أندرويد لكي يتعرف السيرفر على الـ Gradle بنجاح
+        flutter create --platforms=android .
         flutter pub get
 
     - name: Build APK
