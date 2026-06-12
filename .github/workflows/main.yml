@@ -1,0 +1,38 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # خطوة فك الضغط الذكي للملف الذي رفعته
+    - name: Unzip Project
+      run: unzip match_master.zip -d ./
+
+    # تحميل بيئة Flutter داخل السيرفر الافتراضي
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    # تحميل المكتبات المساعدة للعبة
+    - name: Install Dependencies
+      run: flutter pub get
+
+    # بناء ملف الـ APK (نسخة الديباج للتجربة)
+    - name: Build APK
+      run: flutter build apk --debug
+
+    # رفع ملف الـ APK في موقع جيت هاب لتحميله
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Candy_Crush_APK
+        path: build/app/outputs/flutter-apk/app-debug.apk
